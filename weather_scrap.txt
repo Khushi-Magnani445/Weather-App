@@ -1,0 +1,263 @@
+import requests
+from bs4 import BeautifulSoup
+import csv
+from datetime import datetime
+import time
+import urllib.parse
+
+class WeatherScraper:
+    def __init__(self):
+        self.base_url = "https://weather.com/weather/today/l/"
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+
+    def get_weather_data(self, city_code):
+        """
+        Scrape weather data for a given city code
+        """
+        try:
+            url = self.base_url + city_code
+            response = requests.get(url, headers=self.headers)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            print(response)
+            print(response.text)
+            print(response.url)
+            # Get current temperature 
+            """ <span data-testid="TemperatureValue" class="CurrentConditions--tempValue--zUBSz" 
+             dir="ltr">74<span class="CurrentConditions--degreeSymbol--tzLy9">°</span><span>
+             </span></span> """
+             
+            temp = soup.find('span', {'data-testid': 'TemperatureValue'})
+            temperature = temp.text if temp else 'N/A'
+            print(temp.text)
+            
+            # Get weather condition
+            """
+                <div data-testid="wxPhrase" class="CurrentConditions--phraseValue---VS-k">Smoke</div>
+            """
+            condition = soup.find('div', {'data-testid': 'wxPhrase'})
+            weather_condition = condition.text if condition else 'N/A'
+            
+            # Get humidity
+            """
+                <div class="ListItem--listItem--UuEqg WeatherDetailsListItem--WeatherDetailsListItem--HLP3I" 
+                data-testid="WeatherDetailsListItem"><svg class="WeatherDetailsListItem--icon--A88ff Icon--icon--ySD-o 
+                Icon--darkTheme--RWEd0" set="current-conditions" name="humidity" 
+                theme="dark" data-testid="Icon" viewBox="0 0 24 24">
+                <title>Humidity</title><path fill-rule="evenodd" d="M11.743 17.912a4.182 4.182 0 0 1-2.928-1.182 3.972 
+                3.972 0 0 1-.614-4.962.743.743 0 0 1 .646-.349c.234 0 .476.095.66.275l4.467 
+                4.355c.385.376.39.998-.076 1.275a4.216 4.216 0 0 1-2.155.588M11.855 4c.316 
+                0 .61.14.828.395.171.2.36.416.562.647 1.857 2.126 4.965 5.684 4.965 8.73 0 
+                3.416-2.85 6.195-6.353 6.195-3.505 0-6.357-2.78-6.357-6.195 0-3.082 
+                2.921-6.406 4.854-8.605.242-.275.47-.535.673-.772A1.08 1.08 0 0 1 11.855 4"></path>
+                </svg><div data-testid="WeatherDetailsLabel" 
+                class="WeatherDetailsListItem--label--U+Wrx">Humidity</div><div data-testid="wxData" class="WeatherDetailsListItem--wxData--lW-7H">
+                <span data-testid="PercentageValue">29%</span></div></div>
+            """
+            humidity = soup.find('span', {'data-testid': 'PercentageValue'})
+            humidity_value = humidity.text if humidity else 'N/A'
+            
+            return {
+                'city_code': city_code,
+                'temperature': temperature,
+                'condition': weather_condition,
+                'humidity': humidity_value,
+                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
+            
+        except requests.RequestException as e:
+            print(f"Error fetching data for {city_code}: {str(e)}")
+            return None
+
+    def save_to_csv(self, data, filename='weather_data.csv'):
+        """
+        Save weather data to CSV file
+        """
+        try:
+            with open(filename, 'a', newline='', encoding='utf-8') as file:
+                writer = csv.DictWriter(file, fieldnames=data.keys())
+                
+                # Write header if file is empty
+                file.seek(0, 2)
+                if file.tell() == 0:
+                    writer.writeheader()
+                    
+                writer.writerow(data)
+                print(f"Data saved to {filename}")
+                
+        except IOError as e:
+            print(f"Error saving to CSV: {str(e)}")
+
+def main():
+    # Example city codes (you can find these in weather.com URLs)
+    city_codes = {
+        'New York': 'USNY0996',
+        'London': 'UKXX0085',
+        'Tokyo': 'JAXX0085',
+        'Delhi': 'INXX0096',
+        'Mumbai': 'INXX0087',
+        'Bangalore': 'INXX0012',
+        'Kolkata': 'INXX0075',
+        'Chennai': 'INXX0202',
+        'Hyderabad': 'INXX0057',
+        'Ahmedabad': 'INXX0001',
+        'Pune': 'INXX0158',
+        'Jaipur': 'INXX0059',
+        'Lucknow': 'INXX0083'
+    }
+    
+    scraper = WeatherScraper()
+    
+    # Scrape data for each city
+    for city, code in city_codes.items():
+        print(f"\nFetching weather data for {city}...")
+        weather_data = scraper.get_weather_data(code)
+        
+        if weather_data:
+            print(f"Weather in {city}:")
+            print(f"Temperature: {weather_data['temperature']}")
+            print(f"Condition: {weather_data['condition']}")
+            print(f"Humidity: {weather_data['humidity']}")
+            
+            # Save to CSV
+            scraper.save_to_csv(weather_data)
+        
+        # Add delay to be respectful to the website
+        time.sleep(2)
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+dictionary for different cities in india that are well known
+
+india_weather_codes = {
+    # Major metros
+    'Mumbai': 'INXX0087',
+    'Delhi': 'INXX0038',
+    'Bangalore': 'INXX0012',
+    'Hyderabad': 'INXX0057',
+    'Chennai': 'INXX0202',
+    'Kolkata': 'INXX0028',
+    'Ahmedabad': 'INXX0001',
+    'Pune': 'INXX0104',
+    'Surat': 'INXX0123',
+    'Jaipur': 'INXX0059',
+    
+    # Other major cities by region
+    'Agra': 'INXX0002',
+    'Allahabad': 'INXX0003',
+    'Amritsar': 'INXX0005',
+    'Aurangabad': 'INXX0008',
+    'Bhopal': 'INXX0018',
+    'Bhubaneswar': 'INXX0019',
+    'Chandigarh': 'INXX0026',
+    'Coimbatore': 'INXX0030',
+    'Dehradun': 'INXX0035',
+    'Goa': 'INXX0047',
+    'Guwahati': 'INXX0053',
+    'Indore': 'INXX0058',
+    'Jodhpur': 'INXX0062',
+    'Kanpur': 'INXX0067',
+    'Kochi': 'INXX0073',
+    'Lucknow': 'INXX0083',
+    'Ludhiana': 'INXX0084',
+    'Madurai': 'INXX0085',
+    'Mangalore': 'INXX0086',
+    'Nagpur': 'INXX0089',
+    'Nashik': 'INXX0090',
+    'Patna': 'INXX0101',
+    'Raipur': 'INXX0105',
+    'Rajkot': 'INXX0106',
+    'Ranchi': 'INXX0107',
+    'Shimla': 'INXX0116',
+    'Srinagar': 'INXX0119',
+    'Thiruvananthapuram': 'INXX0127',
+    'Udaipur': 'INXX0129',
+    'Vadodara': 'INXX0130',
+    'Varanasi': 'INXX0133',
+    'Visakhapatnam': 'INXX0135',
+    'Vijayawada': 'INXX0134',
+    
+    # Additional cities
+    'Agartala': 'INXX0170',
+    'Ahmedabad': 'INXX0001',
+    'Aizawl': 'INXX0172',
+    'Ajmer': 'INXX0173',
+    'Akola': 'INXX0174',
+    'Aligarh': 'INXX0175',
+    'Amravati': 'INXX0176',
+    'Asansol': 'INXX0006',
+    'Bareilly': 'INXX0178',
+    'Belgaum': 'INXX0014',
+    'Bhavnagar': 'INXX0179',
+    'Bhilai': 'INXX0017',
+    'Bikaner': 'INXX0021',
+    'Bokaro': 'INXX0180',
+    'Cuttack': 'INXX0183',
+    'Daman': 'INXX0032',
+    'Darjeeling': 'INXX0034',
+    'Dhanbad': 'INXX0184',
+    'Dharwad': 'INXX0185',
+    'Dibrugarh': 'INXX0186',
+    'Faridabad': 'INXX0044',
+    'Gandhinagar': 'INXX0046',
+    'Gaya': 'INXX0187',
+    'Ghaziabad': 'INXX0048',
+    'Gorakhpur': 'INXX0188',
+    'Gulbarga': 'INXX0189',
+    'Guntur': 'INXX0052',
+    'Gurgaon': 'INXX0190',
+    'Gwalior': 'INXX0054',
+    'Haridwar': 'INXX0191',
+    'Hubli': 'INXX0056',
+    'Imphal': 'INXX0192',
+    'Jabalpur': 'INXX0058',
+    'Jalandhar': 'INXX0060',
+    'Jalgaon': 'INXX0193',
+    'Jammu': 'INXX0061',
+    'Jamshedpur': 'INXX0194',
+    'Jhansi': 'INXX0195',
+    'Kakinada': 'INXX0196',
+    'Kanyakumari': 'INXX0197',
+    'Karimnagar': 'INXX0198',
+    'Karnal': 'INXX0068',
+    'Kohima': 'INXX0199',
+    'Kolhapur': 'INXX0074',
+    'Kota': 'INXX0076',
+    'Kozhikode': 'INXX0077',
+    'Kurnool': 'INXX0200',
+    'Leh': 'INXX0081',
+    'Mathura': 'INXX0201',
+    'Meerut': 'INXX0203',
+    'Moradabad': 'INXX0204',
+    'Mysore': 'INXX0088',
+    'Nanded': 'INXX0205',
+    'Nellore': 'INXX0206',
+    'Noida': 'INXX0095',
+    'Ooty': 'INXX0097',
+    'Patiala': 'INXX0100',
+    'Port Blair': 'INXX0103',
+    'Puducherry': 'INXX0207',
+    'Rajahmundry': 'INXX0208',
+    'Rohtak': 'INXX0210',
+    'Rourkela': 'INXX0108',
+    'Salem': 'INXX0110',
+    'Shillong': 'INXX0115',
+    'Siliguri': 'INXX0118',
+    'Solapur': 'INXX0209',
+    'Tiruchirappalli': 'INXX0126',
+    'Tirunelveli': 'INXX0211',
+    'Tirupati': 'INXX0212',
+    'Ujjain': 'INXX0213',
+    'Warangal': 'INXX0136'
+}
+
+
+<h1 class="CurrentConditions--location--yub4l">Ahmedabad, Gujarat</h1>

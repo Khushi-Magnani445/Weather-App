@@ -1,0 +1,17 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+.env
+.venv
+env/
+venv/
+
+# IDE files
+.vscode/
+.idea/
+
+*.zip
+*.pptx
+*.ppt
