@@ -19,8 +19,8 @@ The app analyzes trends, plots graphs, and stores weather data in a CSV file for
 ## ⚙️ Installation & Setup
 
 ### 1️⃣ Clone the Repository
-```bash
-git clone https://github.com/your-username/weather-app.git
+
+git clone https://github.com/Khushi-Magnani445/Weather-App.git
 cd weather-app
 2️⃣ Create Virtual Environment (optional but recommended)
 
